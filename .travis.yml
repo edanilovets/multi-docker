@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t edanilovets/client-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run edanilovets/client-test npm test -- --coverage
+
+after_success:
+  - docker build -t edanilovets/complex_app-client ./client
+  - docker build -t edanilovets/complex_app-nginx ./nginx
+  - docker build -t edanilovets/complex_app-server ./server
+  - docker build -t edanilovets/complex_app-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push edanilovets/complex_app-client
+  - docker push edanilovets/complex_app-nginx
+  - docker push edanilovets/complex_app-server
+  - docker push edanilovets/complex_app-worker
